@@ -1,0 +1,93 @@
+@using Microsoft.SemanticKernel.ChatCompletion
+@inject ChatServiceClient ChatServiceClient
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<div class="chatbot-container">
+    <button class="chatbot-button" @onclick="ToggleChat">
+        <i class="fa fa-comments"></i>
+    </button>
+
+    @if (isChatOpen)
+    {
+        <div class="title">AspireShop Smart</div>
+        <div class="box">
+            @foreach (var message in messages)
+            {
+                <text>@((MarkupString)($"<div class=\"msg\">{message}</div><p/>"))</text>
+            }
+            @if (isThinking)
+            {
+                <text>@((MarkupString)"<div class=\"msg\">AspireShop is thinking<span class='dots'>...</span></div><p/>")</text>
+            }
+        </div>
+        <div class="typing-area">
+            <div class="input-field">
+                <input type="text" @bind="inputMessage" placeholder="Type a message..." required @onkeyup="KeyUp"/>
+                <button @onclick="Send">Send</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isChatOpen = false;
+    private string inputMessage = string.Empty;
+    private List<string> messages = new List<string>();
+    private ChatHistory history = [];
+    private bool isThinking = false;
+    private string initialMessage = "AspireShop: Welcome to AspireShop! I can help you with browsing the catalog item, say the item you're looking for and I'll help you navigate to the correct catalog items.";
+
+    private void ToggleChat()
+    {
+        isChatOpen = !isChatOpen;
+        Console.WriteLine($"ToggleChat called. isChatOpen is now {isChatOpen}");
+        StateHasChanged();
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        isThinking = true;
+        messages.Add(initialMessage);
+        history.AddSystemMessage(initialMessage);
+        isThinking = StopThinking();
+        return Task.CompletedTask;
+    }
+
+    private async Task Send()
+    {
+        if (!string.IsNullOrEmpty(inputMessage))
+        {
+            isThinking = true;
+            var response = await ChatServiceClient.SendMessage(inputMessage);
+            messages.Add("You: " + inputMessage);
+            
+            messages.Add("AspireShop: "+response!.message.Replace("\n", "<br/>"));
+            history.AddUserMessage(inputMessage);
+            history.AddAssistantMessage(response.message);
+            inputMessage = string.Empty;
+            if (response.intent is not null)
+            {
+                string searchText = response.intent;
+                NavigationManager.NavigateTo("/?searchText=" + searchText);
+            }
+            //Reload the catalog and pass it on to the Home page
+            isThinking = StopThinking();
+        }
+    }
+
+    async Task KeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Send();
+        }
+    }
+
+    private bool StopThinking()
+    {   
+        StateHasChanged();
+        return false;
+    }
+
+}
