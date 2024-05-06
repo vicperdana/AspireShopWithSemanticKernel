@@ -77,7 +77,7 @@ To deploy the app to Azure, you can use one of the following options:
 > This section will create Azure resources and deploy the solution from your local environment using the Azure Developer CLI. Note that you do not need to clone this repo to complete these steps.
 
 ```pwsh
-azd init -t vicperdana/AspireShopWithSK
+azd init -t vicperdana/AspireShopWithSemanticKernel
 azd up
 
 # if you are wanting to see logs run with debug
