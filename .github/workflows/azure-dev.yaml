@@ -2,7 +2,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - dev-gh-action
+      - main
 
 permissions:
   id-token: write
