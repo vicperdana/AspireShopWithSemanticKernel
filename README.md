@@ -10,7 +10,7 @@ name: ".NET Aspire Shop and Semantic Kernel sample"
 urlFragment: "AspireShopWithSK"
 description: "An example shop app with assistant written with .NET Aspire and Semantic Kernel"
 ---
-
+![Build status](https://github.com/vicperdana/AspireShopWithSemanticKernel/actions/workflows/build.yaml/badge.svg?branch=main)
 # 🤖 Aspire Shop with Semantic Kernel 🔋
 
 ![Screenshot of the web front end the .NET Aspire Shop sample](./images/aspireshop-frontend-complete.png)
