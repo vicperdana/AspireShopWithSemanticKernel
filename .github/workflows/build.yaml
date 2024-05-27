@@ -1,3 +1,4 @@
+name: AspireShopWithSemanticKernel CI
 on:
   workflow_dispatch:
   push:
