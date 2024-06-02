@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   id-token: write
@@ -60,6 +63,13 @@ jobs:
         env:
           AZD_INITIAL_ENVIRONMENT_CONFIG: ${{ secrets.AZD_INITIAL_ENVIRONMENT_CONFIG }}
         shell: pwsh
+        
+      - name: 🧪Run Tests
+        run: dotnet test --verbosity normal
 
       - name: 🚀Deploy Application
         run: azd deploy --no-prompt
+      
+      # comment/remove these lines if you want to keep the environment running
+      - name: 🧹Clean up
+        run: azd down --force
