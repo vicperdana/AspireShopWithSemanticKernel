@@ -20,7 +20,19 @@ public class ChatController(
     [HttpGet ("api/chat")]
     public async Task<ActionResult<ChatService>> PostMessage(string message)
     {
-        //Load prompts
+        //Load prompts and intent -- remove
+        var prompts = LoadPrompts();
+        var getIntent = LoadIntent();
+
+        _kernel.Plugins.Add(prompts);
+        _kernel.ImportPluginFromFunctions(getIntent.Name, getIntent.Description, new KernelFunction[] {getIntent});
+        
+        var intent = await GetIntent(message, getIntent);
+        return await HandleIntent(intent, message);
+    }
+    
+    private KernelPlugin LoadPrompts()
+    {
         string promptsDirectory = Path.Combine(Directory.GetCurrentDirectory(), "./Plugins/Prompts");
 
         if (!Directory.Exists(promptsDirectory))
@@ -28,21 +40,25 @@ public class ChatController(
             throw new DirectoryNotFoundException($"The directory {promptsDirectory} does not exist.");
         }
 
-        var prompts = _kernel.CreatePluginFromPromptDirectory(promptsDirectory);
-        
-        //Load prompt from YAML
+        return _kernel.CreatePluginFromPromptDirectory(promptsDirectory);
+    }
+
+    private KernelFunction LoadIntent()
+    {
         using StreamReader reader = new("Resources/getIntent.prompt.yaml");
-        KernelFunction getIntent = _kernel.CreateFunctionFromPromptYaml(
-            await reader.ReadToEndAsync(),
+        return _kernel.CreateFunctionFromPromptYaml(
+            reader.ReadToEndAsync().Result,
             promptTemplateFactory: new HandlebarsPromptTemplateFactory()
         );
-        
-        _kernel.Plugins.Add(prompts);
-        _kernel.ImportPluginFromFunctions(getIntent.Name, getIntent.Description, new KernelFunction[] {getIntent});
-        
-        // Create choices
-        List<string> choices = ["AllItems", "Unrelated", "EndConversation", "FilterCatalogItem"];
-        
+    }
+    
+    private List<string> CreateChoices()
+    {
+        return new List<string> {"AllItems", "Unrelated", "EndConversation", "FilterCatalogItem"};
+    }
+    
+    private List<ChatHistory> CreateFewShotExamples()
+    {
         // Create few-shot examples
         List<ChatHistory> fewShotExamples =
         [
@@ -77,18 +93,18 @@ public class ChatController(
                 new ChatMessageContent(AuthorRole.Assistant, "Unrelated")
             ]
         ];
-        
-        // Create chat history
-        ChatHistory history = [];
-        
-        OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
-        {
-            MaxTokens = 200,
-            ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
-        };
+        return fewShotExamples;
+    }
+    
+    private async Task<string> GetIntent(string message, KernelFunction getIntent)
+    {
+        var choices = CreateChoices();
+        var fewShotExamples = CreateFewShotExamples();
+        var history = new ChatHistory();
+
         var intent = await _kernel.InvokeAsync(
             getIntent,
-            new(openAIPromptExecutionSettings)
+            new KernelArguments
             {
                 { "request", message },
                 { "choices", choices },
@@ -96,23 +112,40 @@ public class ChatController(
                 { "fewShotExamples", fewShotExamples }
             }
         );
+
+        return intent.ToString();
+    }
+    
+    private async Task<ChatService> HandleIntent(string intent, string message)
+    {
+        // Create a history object to keep track of the conversation
+        var history = new ChatHistory();
         
-        switch (intent.ToString())
+        OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
+        {
+            MaxTokens = 200,
+            ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+        };
+    
+        // Handle different intents with corresponding responses or actions
+        switch (intent)
         {
             case "EndConversation":
                 string responseEnd = $"Thank you for shopping at Aspire Shop";
                 history.AddAssistantMessage(responseEnd);
                 return new ChatService(responseEnd, history);
+
             case "AllItems":
                 string responseAll = $"Here are all items";
                 history.AddAssistantMessage(responseAll);
                 return new ChatService(responseAll, history, " ");
+
             case "Unrelated":
                 string responseUnrelated = $"I'm sorry, I am unable to assist with that request. Please try again asking related to catalog items of Aspire Shop.";
                 history.AddAssistantMessage(responseUnrelated);
                 return new ChatService(responseUnrelated, history);
         }
-
+        
         string systemPrompt =
             """
             You are an AI assistant that helps people find information from Aspire Shop. You can help users find products, get information about product and nothing else. Do not offer to buy products, add to cart, or any other actions. If you found catalog items, only mention the name and the price and not any other information. Do not say that there is no picture available or not as it is not relevant. If the user asks for items in plural, remove the 's' and search for the singular form.
