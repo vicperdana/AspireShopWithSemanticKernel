@@ -20,7 +20,6 @@ public class ChatController(
     [HttpGet ("api/chat")]
     public async Task<ActionResult<ChatService>> PostMessage(string message)
     {
-        //Load prompts and intent -- remove
         var prompts = LoadPrompts();
         var getIntent = LoadIntent();
 
