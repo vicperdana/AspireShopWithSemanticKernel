@@ -69,3 +69,7 @@ jobs:
 
       - name: 🚀Deploy Application
         run: azd deploy --no-prompt
+      
+      # comment/remove these lines if you want to keep the environment running
+      - name: 🧹Clean up
+        run: azd down --no-prompt
