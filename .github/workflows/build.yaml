@@ -65,7 +65,7 @@ jobs:
         shell: pwsh
         
       - name: 🧪Run Tests
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --verbosity normal
 
       - name: 🚀Deploy Application
         run: azd deploy --no-prompt
