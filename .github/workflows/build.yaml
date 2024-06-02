@@ -63,6 +63,9 @@ jobs:
         env:
           AZD_INITIAL_ENVIRONMENT_CONFIG: ${{ secrets.AZD_INITIAL_ENVIRONMENT_CONFIG }}
         shell: pwsh
+        
+      - name: 🧪Run Tests
+        run: dotnet test --no-restore --verbosity normal
 
       - name: 🚀Deploy Application
         run: azd deploy --no-prompt
