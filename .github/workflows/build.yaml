@@ -72,4 +72,4 @@ jobs:
       
       # comment/remove these lines if you want to keep the environment running
       - name: 🧹Clean up
-        run: azd down --no-prompt
+        run: azd down --force
