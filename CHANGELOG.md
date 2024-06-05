@@ -8,10 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- 
+June the 5th 2024:
+- **New Workflow**: Named "CodeQL" for CodeQL analysis.
 
 ### Changed
-- 
+
+June the 5th 2024:
+- Microsoft.AspNetCore.OpenApi to 8.0.6
+- Microsoft.EntityFrameworkCore.Tools 8.0.6
+- coverlet.collector 6.0.2
+- xunit.runner.visualstudio 2.8.1
+- xunit 2.8.1
+- Semantic Kernel 1.14.0
 
 ### Deprecated
 - 
@@ -25,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - 
 
+## [0.2.0] - 2024-06-05
 ## [0.1.0] - 2024-04-26
 
 ### Added
