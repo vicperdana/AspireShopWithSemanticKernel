@@ -14,6 +14,13 @@ June the 5th 2024:
 ### Changed
 
 September 23rd, 2024:
+- Aspire.Hosting.AppHost 8.2.0
+- Aspire.Hosting.PostgreSQL 8.2.0
+- Aspire.Hosting.Redis 8.2.0
+- Grpc.AspNetCore to 2.66.0
+- Grpc.AspNetCore.HealthChecks to 2.66.0
+- Aspire.StackExchange.Redis to 8.2.0
+- Microsoft.SemanticKernel to 1.20.0
 
 June the 5th 2024:
 - Microsoft.AspNetCore.OpenApi to 8.0.6
