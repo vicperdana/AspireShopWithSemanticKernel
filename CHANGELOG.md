@@ -13,6 +13,8 @@ June the 5th 2024:
 
 ### Changed
 
+September 23rd, 2024:
+
 June the 5th 2024:
 - Microsoft.AspNetCore.OpenApi to 8.0.6
 - Microsoft.EntityFrameworkCore.Tools 8.0.6
