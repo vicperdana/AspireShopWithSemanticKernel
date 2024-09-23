@@ -2,11 +2,10 @@ using AspireShop.ChatService.Plugins;
 using Microsoft.SemanticKernel;
 using AspireShop.ChatService.Utilities;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 using Microsoft.SemanticKernel.Plugins.Core;
 using AspireShop.ChatService.Services;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();

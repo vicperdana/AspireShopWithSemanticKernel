@@ -1,6 +1,5 @@
 using System.Text.Json;
 using AspireShop.ChatService.Services;
-using Azure.AI.OpenAI;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
