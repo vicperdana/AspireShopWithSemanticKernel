@@ -1,6 +1,7 @@
 @using Microsoft.SemanticKernel.ChatCompletion
 @inject ChatServiceClient ChatServiceClient
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @rendermode InteractiveServer
 
 <div class="chatbot-container">
@@ -26,6 +27,7 @@
                 <input type="text" @bind="inputMessage" placeholder="Type a message..." required @onkeyup="KeyUp"/>
                 <button @onclick="Send">Send</button>
             </div>
+            <button @onclick="StartVoiceInput">🎤</button>
         </div>
     }
 </div>
@@ -88,6 +90,19 @@
     {   
         StateHasChanged();
         return false;
+    }
+    
+    private async Task StartVoiceInput()
+    {
+        await JSRuntime.InvokeVoidAsync("speechRecognition.startRecognition", DotNetObjectReference.Create(this));
+    }
+
+    [JSInvokable]
+    public async Task ReceiveSpeechInput(string transcript)
+    {
+        inputMessage = transcript;
+        await Send();
+        isThinking = StopThinking();
     }
 
 }
