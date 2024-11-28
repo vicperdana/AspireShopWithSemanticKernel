@@ -46,7 +46,7 @@ builder.Services.AddSingleton<IChatCompletionService>(sp =>
 
 builder.Services.AddHttpServiceReference<CatalogChatClient>("https+http://catalogservice", healthRelativePath: "health");
 
-builder.Services.AddKeyedSingleton<FilterCatalogItem>("FilterCatalogItem", (Func<IServiceProvider, object, FilterCatalogItem>) ((sp, key) =>
+builder.Services.AddKeyedSingleton<FilterCatalogItem>("FilterCatalogItem", (Func<IServiceProvider, object?, FilterCatalogItem>) ((sp, key) =>
 {
     var catalogClientChatService = sp.GetRequiredService<CatalogChatClient>();
     if (catalogClientChatService is null)
