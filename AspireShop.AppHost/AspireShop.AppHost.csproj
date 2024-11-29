@@ -16,6 +16,7 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="8.2.2" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="8.2.2" />
+    <PackageReference Include="Aspire.Hosting.Qdrant" Version="8.2.2" />
     <PackageReference Include="Aspire.Hosting.Redis" Version="8.2.2" />
   </ItemGroup>
 
@@ -24,6 +25,7 @@
     <ProjectReference Include="..\AspireShop.ChatService\AspireShop.ChatService.csproj" />
     <ProjectReference Include="..\AspireShop.CatalogDbManager\AspireShop.CatalogDbManager.csproj" />
     <ProjectReference Include="..\AspireShop.CatalogService\AspireShop.CatalogService.csproj" />
+    <ProjectReference Include="..\AspireShop.DataEmbedder\AspireShop.DataEmbedder.csproj" />
     <ProjectReference Include="..\AspireShop.Frontend\AspireShop.Frontend.csproj" />
   </ItemGroup>
 

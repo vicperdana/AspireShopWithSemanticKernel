@@ -2,6 +2,7 @@
 
 
 var catalogDb = builder.AddPostgres("catalog", password: builder.CreateStablePassword("catalog-password"));
+
 if (builder.ExecutionContext.IsRunMode)
 {
     catalogDb.WithDataVolume();
@@ -23,6 +24,12 @@ var catalogService = builder.AddProject<Projects.AspireShop_CatalogService>("cat
 var basketService = builder.AddProject<Projects.AspireShop_BasketService>("basketservice")
     .WithReference(basketCache);
 
+var qdrant = builder.AddQdrant("qdrant");
+
+var dataEmbedder = builder.AddProject<Projects.AspireShop_DataEmbedder>("dataembedder")
+    .WithReference(postgres)
+    .WithReference(qdrant);
+
 // Azure OpenAI
 var chatDeploymentName = builder.AddParameter("chatDeploymentName", secret: true);
 var chatEndpoint = builder.AddParameter("chatEndpoint", secret: true);
@@ -32,7 +39,8 @@ var chatService = builder.AddProject<Projects.AspireShop_ChatService>("chatservi
     .WithEnvironment("AzureOpenAI__Endpoint", chatEndpoint)
     .WithEnvironment("AzureOpenAI__ApiKey", chatApiKey)
     .WithReference(catalogService)
-    .WithReference(postgres);
+    .WithReference(postgres)
+    .WithReference(qdrant);
 
 /* OpenAI
  var chatModelId = builder.AddParameter("chatModelId", secret: true);
