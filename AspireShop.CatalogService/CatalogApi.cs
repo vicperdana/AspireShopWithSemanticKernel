@@ -11,13 +11,13 @@ public static class CatalogApi
 
         group.WithTags("Catalog");
 
-        group.MapGet("items/type/all/brand/{catalogBrandId?}", async (int? catalogBrandId, CatalogDbContext catalogContext, int? before, int? after, int pageSize = 8) =>
+        group.MapGet("items/type/all/brand/{catalogBrandId?}", async (int? catalogBrandId, CatalogDbContext catalogContext, ulong? before, ulong? after, int pageSize = 8) =>
         {
             var itemsOnPage = await catalogContext.GetCatalogItemsCompiledAsync(catalogBrandId, before, after, pageSize);
 
             var (firstId, nextId) = itemsOnPage switch
             {
-                [] => (0, 0),
+                [] => (0UL, 0UL),
                 [var only] => (only.Id, only.Id),
                 [var first, .., var last] => (first.Id, last.Id)
             };
@@ -64,7 +64,7 @@ public static class CatalogApi
     
             var (firstId, nextId) = result switch
             {
-                [] => (0, 0),
+                [] => (0UL, 0UL),
                 [var only] => (only.Id, only.Id),
                 [var first, .., var last] => (first.Id, last.Id)
             };
@@ -77,7 +77,7 @@ public static class CatalogApi
                 searchText);
         });
         
-        group.MapGet("items/price/below/{price}", async (decimal price, CatalogDbContext catalogContext, int pageSize = 8) =>
+        group.MapGet("items/price/below/{price}", async (double price, CatalogDbContext catalogContext, int pageSize = 8) =>
         {
             var items = catalogContext.CatalogItems.AsQueryable();
 
@@ -87,7 +87,7 @@ public static class CatalogApi
 
             var (firstId, nextId) = result switch
             {
-                [] => (0, 0),
+                [] => (0UL, 0UL),
                 [var only] => (only.Id, only.Id),
                 [var first, .., var last] => (first.Id, last.Id)
             };
@@ -103,4 +103,4 @@ public static class CatalogApi
     }
 }
 
-public record CatalogItemsPage(int FirstId, int NextId, bool IsLastPage, IEnumerable<CatalogItem> Data, string? SearchText = null);
+public record CatalogItemsPage(ulong FirstId, ulong NextId, bool IsLastPage, IEnumerable<CatalogItem> Data, string? SearchText = null);

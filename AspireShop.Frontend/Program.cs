@@ -2,6 +2,7 @@
 using AspireShop.Frontend.Components;
 using AspireShop.Frontend.Services;
 using AspireShop.GrpcBasket;
+using Qdrant.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,27 @@ builder.AddServiceDefaults();
 builder.Services.AddHttpForwarderWithServiceDiscovery();
 
 builder.Services.AddHttpServiceReference<CatalogServiceClient>("https+http://catalogservice", healthRelativePath: "health");
+#pragma warning disable SKEXP0010
+builder.Services.AddSingleton<CatalogServiceClientVector>(sp =>
+{
+    var qdrantClient = sp.GetRequiredService<QdrantClient>();
+    var EmbedDeploymentName = Environment.GetEnvironmentVariable("AzureOpenAI__EmbedDeploymentName")
+                              ?? throw new ArgumentException("Environment variable 'AzureOpenAI__EmbedDeploymentName' is not set.");
+    var Endpoint = Environment.GetEnvironmentVariable("AzureOpenAI__EmbedEndpoint")
+                   ?? throw new ArgumentException("Environment variable 'AzureOpenAI__EmbedEndpoint' is not set.");
+    var ApiKey = Environment.GetEnvironmentVariable("AzureOpenAI__EmbedApiKey")
+                 ?? throw new ArgumentException("Environment variable 'AzureOpenAI__EmbedApiKey' is not set.");
+    var qdrantCollectionName = "catalog_items";
+
+    return new CatalogServiceClientVector(
+#pragma warning restore SKEXP0010
+        qdrantClient,
+        EmbedDeploymentName,
+        Endpoint,
+        ApiKey,
+        qdrantCollectionName
+    );
+});
 
 var isHttps = builder.Configuration["DOTNET_LAUNCH_PROFILE"] == "https";
 

@@ -47,12 +47,23 @@ var chatDeploymentName = builder.AddParameter("chatDeploymentName", secret: true
 var chatEndpoint = builder.AddParameter("chatEndpoint", secret: true);
 var chatApiKey = builder.AddParameter("chatApiKey", secret: true);
 
-var chatService = builder.AddProject<Projects.AspireShop_ChatService>("chatservice")
+// Without Vector Search
+/*var chatService = builder.AddProject<Projects.AspireShop_ChatService>("chatservice")
     .WithEnvironment("AzureOpenAI__ChatDeploymentName", chatDeploymentName)
     .WithEnvironment("AzureOpenAI__Endpoint", chatEndpoint)
     .WithEnvironment("AzureOpenAI__ApiKey", chatApiKey)
     .WithReference(catalogService)
-    .WithReference(postgres);
+    .WithReference(postgres);*/
+
+//With Vector Search
+var chatService = builder.AddProject<Projects.AspireShop_ChatService>("chatservice")
+    .WithEnvironment("AzureOpenAI__ChatDeploymentName", chatDeploymentName)
+    .WithEnvironment("AzureOpenAI__Endpoint", chatEndpoint)
+    .WithEnvironment("AzureOpenAI__ApiKey", chatApiKey)
+    .WithEnvironment("AzureOpenAI__EmbedDeploymentName", embedDeploymentName)
+    .WithEnvironment("AzureOpenAI__EmbedEndpoint", embedEndpoint)
+    .WithEnvironment("AzureOpenAI__EmbedApiKey", embedApiKey)
+    .WithReference(qdrant);
 
 /* Enable the chat service to use OpenAI
  var chatModelId = builder.AddParameter("chatModelId", secret: true);

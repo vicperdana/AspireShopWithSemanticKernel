@@ -7,6 +7,9 @@ public sealed class AzureOpenAI
 {
     [Required]
     public string ChatDeploymentName { get; set; } = string.Empty;
+    
+    [Required]
+    public string EmbedDeploymentName { get; set; } = string.Empty;
 
     [Required]
     public string Endpoint { get; set; } = string.Empty;

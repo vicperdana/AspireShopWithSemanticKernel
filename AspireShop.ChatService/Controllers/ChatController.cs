@@ -52,7 +52,8 @@ public class ChatController(
     
     private List<string> CreateChoices()
     {
-        return new List<string> {"AllItems", "Unrelated", "EndConversation", "FilterCatalogItem"};
+        return new List<string>
+            { "AllItems", "Unrelated", "EndConversation", /*"FilterCatalogItem"*/ "FilterCatalogItemVector" };
     }
     
     private List<ChatHistory> CreateFewShotExamples()
@@ -68,12 +69,14 @@ public class ChatController(
             [
                 new ChatMessageContent(AuthorRole.User, "Show me all hoodies"),
                 new ChatMessageContent(AuthorRole.System, "Intent:"),
-                new ChatMessageContent(AuthorRole.Assistant, "FilterCatalogItem")
+                //new ChatMessageContent(AuthorRole.Assistant, "FilterCatalogItem")
+                new ChatMessageContent(AuthorRole.Assistant, "FilterCatalogItemVector")
             ],
             [
                 new ChatMessageContent(AuthorRole.User, "Show me all t-shirts"),
                 new ChatMessageContent(AuthorRole.System, "Intent:"),
-                new ChatMessageContent(AuthorRole.Assistant, "FilterCatalogItem")
+                //new ChatMessageContent(AuthorRole.Assistant, "FilterCatalogItem")
+                new ChatMessageContent(AuthorRole.Assistant, "FilterCatalogItemVector")
             ],
             [
                 new ChatMessageContent(AuthorRole.User, "That is all I need"),

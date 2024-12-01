@@ -24,10 +24,12 @@
         </div>
         <div class="typing-area">
             <div class="input-field">
-                <input type="text" @bind="inputMessage" placeholder="Type a message..." required @onkeyup="KeyUp"/>
-                <button @onclick="Send">Send</button>
+                <input type="text" @bind="inputMessage" placeholder="Type a message..." required @onkeyup="KeyUp" />
+                <div class="button-group">
+                    <button class="mic-button" @onclick="StartVoiceInput" aria-label="Start voice input">🎤</button>
+                    <button @onclick="Send" class="send-button">Send</button>
+                </div>
             </div>
-            <button @onclick="StartVoiceInput">🎤</button>
         </div>
     }
 </div>

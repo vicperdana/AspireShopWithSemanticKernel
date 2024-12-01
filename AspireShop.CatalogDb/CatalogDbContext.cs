@@ -7,8 +7,8 @@ public class CatalogDbContext(DbContextOptions<CatalogDbContext> options) : DbCo
 {
     // https://learn.microsoft.com/ef/core/performance/advanced-performance-topics#compiled-queries
 
-    private static readonly Func<CatalogDbContext, int?, int?, int?, int, IAsyncEnumerable<CatalogItem>> GetCatalogItemsQuery =
-        EF.CompileAsyncQuery((CatalogDbContext context, int? catalogBrandId, int? before, int? after, int pageSize) =>
+    private static readonly Func<CatalogDbContext, int?, ulong?, ulong?, int, IAsyncEnumerable<CatalogItem>> GetCatalogItemsQuery =
+        EF.CompileAsyncQuery((CatalogDbContext context, int? catalogBrandId, ulong? before, ulong? after, int pageSize) =>
            context.CatalogItems.AsNoTracking()
                   .OrderBy(ci => ci.Id)
                   .Where(ci => catalogBrandId == null || ci.CatalogBrandId == catalogBrandId)
@@ -16,7 +16,7 @@ public class CatalogDbContext(DbContextOptions<CatalogDbContext> options) : DbCo
                   .Where(ci => after == null || ci.Id >= after)
                   .Take(pageSize + 1));
 
-    public Task<List<CatalogItem>> GetCatalogItemsCompiledAsync(int? catalogBrandId, int? before, int? after, int pageSize)
+    public Task<List<CatalogItem>> GetCatalogItemsCompiledAsync(int? catalogBrandId, ulong? before, ulong? after, int pageSize)
     {
         return ToListAsync(GetCatalogItemsQuery(this, catalogBrandId, before, after, pageSize));
     }

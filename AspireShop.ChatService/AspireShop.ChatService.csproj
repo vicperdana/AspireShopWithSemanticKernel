@@ -8,12 +8,16 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Aspire.Qdrant.Client" Version="9.0.0" />
       <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.31.0" />
       <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.31.0" />
+      <PackageReference Include="Microsoft.SemanticKernel.Connectors.Qdrant" Version="1.31.0-preview" />
       <PackageReference Include="Microsoft.SemanticKernel.Plugins.Core" Version="1.31.0-alpha" />
       <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Handlebars" Version="1.31.0" />
       <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.31.0" />
+      <PackageReference Include="Qdrant.Client" Version="1.12.0" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="7.1.0" />
+      <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     </ItemGroup>
 
     <ItemGroup>
