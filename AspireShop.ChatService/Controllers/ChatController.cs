@@ -134,7 +134,7 @@ public class ChatController(
                 return new ChatService(responseEnd, history);
 
             case "AllItems":
-                string responseAll = $"Here are all items";
+                string responseAll = $"Here are all the items";
                 history.AddAssistantMessage(responseAll);
                 return new ChatService(responseAll, history, " ");
 

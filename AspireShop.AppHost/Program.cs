@@ -1,7 +1,8 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
 
-var catalogDb = builder.AddPostgres("catalog", password: builder.CreateStablePassword("catalog-password"));
+var catalogDb = builder.AddPostgres("catalog", password: builder.CreateStablePassword("catalog-password"))
+                                                    .WithPgAdmin();
 
 if (builder.ExecutionContext.IsRunMode)
 {
@@ -24,25 +25,36 @@ var catalogService = builder.AddProject<Projects.AspireShop_CatalogService>("cat
 var basketService = builder.AddProject<Projects.AspireShop_BasketService>("basketservice")
     .WithReference(basketCache);
 
+
+// Enable the Embedding service to use Azure OpenAI
+var embedDeploymentName = builder.AddParameter("embedDeploymentName", secret: true);
+var embedEndpoint = builder.AddParameter("embedEndpoint", secret: true);
+var embedApiKey = builder.AddParameter("embedApiKey", secret: true);
+
+// Embedding generation and indexing
+//var apiKey = builder.AddParameter("apikey", secret: true);
 var qdrant = builder.AddQdrant("qdrant");
 
 var dataEmbedder = builder.AddProject<Projects.AspireShop_DataEmbedder>("dataembedder")
+    .WithEnvironment("AzureOpenAI__EmbedDeploymentName", embedDeploymentName)
+    .WithEnvironment("AzureOpenAI__EmbedEndpoint", embedEndpoint)
+    .WithEnvironment("AzureOpenAI__EmbedApiKey", embedApiKey)
     .WithReference(postgres)
     .WithReference(qdrant);
 
-// Azure OpenAI
+// Enable the chat service to use Azure OpenAI
 var chatDeploymentName = builder.AddParameter("chatDeploymentName", secret: true);
 var chatEndpoint = builder.AddParameter("chatEndpoint", secret: true);
 var chatApiKey = builder.AddParameter("chatApiKey", secret: true);
+
 var chatService = builder.AddProject<Projects.AspireShop_ChatService>("chatservice")
     .WithEnvironment("AzureOpenAI__ChatDeploymentName", chatDeploymentName)
     .WithEnvironment("AzureOpenAI__Endpoint", chatEndpoint)
     .WithEnvironment("AzureOpenAI__ApiKey", chatApiKey)
     .WithReference(catalogService)
-    .WithReference(postgres)
-    .WithReference(qdrant);
+    .WithReference(postgres);
 
-/* OpenAI
+/* Enable the chat service to use OpenAI
  var chatModelId = builder.AddParameter("chatModelId", secret: true);
 var chatApiKey = builder.AddParameter("chatApiKey", secret: true);
 var chatService = builder.AddProject<Projects.AspireShop_ChatService>("chatservice")

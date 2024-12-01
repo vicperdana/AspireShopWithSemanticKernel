@@ -14,9 +14,9 @@ public class CatalogDbEmbedder
     private readonly QdrantClient _qdrantClient;
     private readonly NpgsqlDataSource _dataSource;
 
-    public CatalogDbEmbedder(NpgsqlDataSource dataSource, QdrantClient qdrantClient, string openAiDeploymentName, string openAiEndpoint)
+    public CatalogDbEmbedder(NpgsqlDataSource dataSource, QdrantClient qdrantClient, string openAiDeploymentName, string openAiEndpoint, string openAIKey)
     {
-        _embeddingService = new AzureOpenAITextEmbeddingGenerationService(openAiDeploymentName, openAiEndpoint, new Azure.Identity.AzureCliCredential());
+        _embeddingService = new AzureOpenAITextEmbeddingGenerationService(openAiDeploymentName, openAiEndpoint, apiKey: openAIKey);
         _qdrantClient = qdrantClient;
         _dataSource = dataSource;
     }
@@ -35,14 +35,24 @@ public class CatalogDbEmbedder
         await using var conn = _dataSource.CreateConnection();
         await conn.OpenAsync();
 
-        var cmd = new NpgsqlCommand("SELECT description FROM catalog_items", conn);
+        var cmd = new NpgsqlCommand("SELECT * FROM \"Catalog\"", conn);
         await using var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
         {
-            data.Add(reader.GetString(0)); // Adjust based on your table schema
-        }
+            var row = new List<string>();
 
+            // Iterate over all columns in the current row
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                // Check if the column value is null
+                var value = reader.IsDBNull(i) ? null : reader.GetValue(i).ToString();
+                row.Add(value);
+            }
+
+            // Add the row (all columns) to the main data list
+            data.Add(string.Join(", ", row)); // You can adjust the separator if needed
+        }
         return data;
     }
 
@@ -82,7 +92,7 @@ public class CatalogDbEmbedder
             });
         }
 
-// Upsert points into the collection
+        // Upsert points into the collection
         var updateResult = await _qdrantClient.UpsertAsync(collectionName, points);
 
         if (updateResult.Status == UpdateStatus.Completed)
