@@ -52,9 +52,11 @@ public class CatalogChatClientVector
         
         var searchVector = await _embeddingService.GenerateEmbeddingAsync(searchText);
         var searchResult = await collection.VectorizedSearchAsync(searchVector);
-        var searchResultItem = await searchResult.Results.FirstAsync();
         var catalogItems = new List<CatalogItemVector<TKey>>();
-        catalogItems.Add(new CatalogItemVector<TKey>()
+
+        await foreach (var searchResultItem in searchResult.Results)
+        {
+            catalogItems.Add(new CatalogItemVector<TKey>()
             {
                 Id = searchResultItem.Record.Id,
                 Name = searchResultItem.Record.Name,
@@ -64,8 +66,8 @@ public class CatalogChatClientVector
                 CatalogBrandId = searchResultItem.Record.CatalogBrandId,
                 CatalogTypeId = searchResultItem.Record.CatalogTypeId,
                 DefinitionEmbedding = searchResultItem.Record.DefinitionEmbedding
-            }
-        );
+            });
+        }
 
        
         return catalogItems;
