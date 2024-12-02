@@ -5,7 +5,7 @@ using AspireShop.ChatService.Services;
 namespace AspireShop.ChatService.Plugins;
 
 #pragma warning disable SKEXP0010
-[Description("Filter catalog items with Vector Embeddings & image recognition")]
+[Description("Filter catalog items with Vector Embeddings")]
 public class FilterCatalogItemVector(CatalogChatClientVector catalogChatClient)
 {
     [KernelFunction, Description("Return a list of catalog items filtered by name or description")]
@@ -26,6 +26,7 @@ public class FilterCatalogItemVector(CatalogChatClientVector catalogChatClient)
                 CatalogBrandId = item.CatalogBrandId,
                 CatalogTypeId = item.CatalogTypeId
             }).ToList();
+            
             return new CatalogItemsPageVector(0, 0, true, catalogItems);
         }
         else

@@ -345,9 +345,27 @@ html {
     color: #333;
 }
 
+.input-field {
+    display: flex; /* Arrange children in a row */
+    align-items: center; /* Vertically center elements */
+    gap: 10px; /* Add spacing between elements */
+    width: 100%; /* Make sure it spans full width */
+    box-sizing: border-box; /* Include padding in width */
+}
+
+input[type="text"] {
+    flex-grow: 1; /* Allow input to take up remaining space */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
 .chatbot-container .typing-area .input-field {
     width: 100%;
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .chatbot-container .typing-area .input-field input {
@@ -472,78 +490,32 @@ html {
     padding: 0;
     border: 0;
 }
-
-.typing-area {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-    border-top: 1px solid #ccc;
-    background-color: #f9f9f9;
-}
-
-.input-field {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 0.5rem;
-}
-
 .input-field input {
     flex-grow: 1;
-    padding: 0.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-size: 1rem;
+    margin-right: 10px;
 }
 
-
-.button-group {
-    display: flex;
-    gap: 0.5rem;
-}
-
-
-.mic-button, .send-button {
-    padding: 0.5rem;
-    font-size: 1rem;
-    color: #9fa5b3;
-    background-color: var(--dotnet-purple-color);
+.send-button,
+.voice-input-button {
+    padding: 10px 15px;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
+    background: #007bff;
+    color: white;
     cursor: pointer;
-    transition: var(--quick-quarter-second-transition);
+    font-size: 14px;
+    min-width: 50px; /* Prevent buttons from shrinking */
 }
 
-.mic-button {
-    border-radius: 50%; /* Circular mic button */
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.send-button:hover,
+.voice-input-button:hover {
+    background: #0056b3;
 }
 
-.send-button {
-    border-radius: 4px; /* Standard button shape for send */
-    padding: 8px 16px;
+.voice-input-button {
+    background: #28a745; /* Mic button has a different color */
 }
 
-.mic-button:hover, .send-button:hover {
-    background-color: var(--dotnet-purple-color-hover);
-}
-
-.mic-button:disabled, .send-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-@media (max-width: 480px) {
-    .input-field {
-        flex-direction: column; /* Stack input and buttons on narrow screens */
-        gap: 12px; /* Larger spacing for stacked layout */
-    }
-
-    .button-group {
-        justify-content: flex-end; /* Align buttons to the right for stacked layout */
-    }
+.voice-input-button:hover {
+    background: #1e7e34;
 }
