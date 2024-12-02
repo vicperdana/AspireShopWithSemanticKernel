@@ -37,7 +37,7 @@ using (var scope = app.Services.CreateScope())
     var embedder = scope.ServiceProvider.GetRequiredService<CatalogDbEmbedder>();
 #pragma warning restore SKEXP0010
     Console.WriteLine("Starting data ingestion and vectorization...");
-    await embedder.IngestAndVectorizeDataAsync();
+    await embedder.IngestAndVectorizeDataAsync<ulong>();
     Console.WriteLine("Data ingestion and vectorization completed.");
 }
 

@@ -22,7 +22,7 @@ public class FilterCatalogItemVector(CatalogChatClientVector catalogChatClient)
                 Name = item.Name,
                 Description = item.Description,
                 Price = item.Price,
-                PictureUri = item.PictureUri,
+                PictureFileName = item.PictureFileName,
                 CatalogBrandId = item.CatalogBrandId,
                 CatalogTypeId = item.CatalogTypeId
             }).ToList();

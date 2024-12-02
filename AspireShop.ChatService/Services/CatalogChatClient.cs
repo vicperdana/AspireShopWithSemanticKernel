@@ -25,7 +25,7 @@ public record CatalogItem
     public required string Name { get; init; }
     public required string Description { get; init; }
     public double Price { get; init; }
-    public string? PictureUri { get; init; }
+    public string? PictureFileName { get; init; }
     public int CatalogBrandId { get; init; }
     public string? CatalogBrand { get; init; }
     public int CatalogTypeId { get; init; }

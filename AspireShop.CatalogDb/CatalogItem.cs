@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace AspireShop.CatalogDb;
 
 public class CatalogItem
@@ -18,4 +20,7 @@ public class CatalogItem
     public int RestockThreshold { get; set; }
     public int MaxStockThreshold { get; set; }
     public bool OnReorder { get; set; }
+    
+    [NotMapped]
+    public ReadOnlyMemory<float> DefinitionEmbedding { get; set; }
 }

@@ -33,11 +33,42 @@ public class CatalogChatClientVector
 
     public async Task<List<CatalogItemVector<TKey>>> SearchVectorAsync<TKey>(string? searchText)
     {
+        var recordDefinition = new VectorStoreRecordDefinition
+        {
+            Properties = new List<VectorStoreRecordProperty>
+            {
+                new VectorStoreRecordKeyProperty("Id", typeof(ulong)),
+                new VectorStoreRecordDataProperty("Name", typeof(string)),
+                new VectorStoreRecordDataProperty("Description", typeof(string)),
+                new VectorStoreRecordDataProperty("Price", typeof(double)),
+                new VectorStoreRecordDataProperty("PictureUri", typeof(string)),
+                new VectorStoreRecordDataProperty("CatalogBrandId", typeof(int)),
+                new VectorStoreRecordDataProperty("CatalogTypeId", typeof(int)),
+                new VectorStoreRecordVectorProperty("DefinitionEmbedding", typeof(ReadOnlyMemory<float>))
+                    { Dimensions = 1536 }
+            }
+        };
         var collection = _vectorStore.GetCollection<TKey, CatalogItemVector<TKey>>(_qdrantCollectionName);
+        
         var searchVector = await _embeddingService.GenerateEmbeddingAsync(searchText);
-        var searchResult = await collection.VectorizedSearchAsync(searchVector, new() { Top = 1 });
-        var resultRecords = await searchResult.Results.Select(result => result.Record).ToListAsync();
-        return resultRecords;
+        var searchResult = await collection.VectorizedSearchAsync(searchVector);
+        var searchResultItem = await searchResult.Results.FirstAsync();
+        var catalogItems = new List<CatalogItemVector<TKey>>();
+        catalogItems.Add(new CatalogItemVector<TKey>()
+            {
+                Id = searchResultItem.Record.Id,
+                Name = searchResultItem.Record.Name,
+                Description = searchResultItem.Record.Description,
+                Price = searchResultItem.Record.Price,
+                PictureFileName = searchResultItem.Record.PictureFileName,
+                CatalogBrandId = searchResultItem.Record.CatalogBrandId,
+                CatalogTypeId = searchResultItem.Record.CatalogTypeId,
+                DefinitionEmbedding = searchResultItem.Record.DefinitionEmbedding
+            }
+        );
+
+       
+        return catalogItems;
     }
 }
 
@@ -58,7 +89,7 @@ public record CatalogItemVector<TKey>
     public double Price { get; init; }
     
     [VectorStoreRecordData]
-    public string? PictureUri { get; init; }
+    public string? PictureFileName { get; init; }
     
     [VectorStoreRecordData]
     public int CatalogBrandId { get; init; }

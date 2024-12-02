@@ -52,7 +52,7 @@ public record CatalogItemsPageVector(int FirstId, int NextId, bool IsLastPage, I
 public record CatalogItemVector<TKey>
 {
     [VectorStoreRecordKey]
-    public int Id { get; init; }
+    public ulong Id { get; init; }
     
     [VectorStoreRecordData(IsFilterable = true)]
     public required string Name { get; init; }
@@ -61,10 +61,10 @@ public record CatalogItemVector<TKey>
     public required string Description { get; init; }
     
     [VectorStoreRecordData]
-    public decimal Price { get; init; }
+    public double Price { get; init; }
     
     [VectorStoreRecordData]
-    public string? PictureUri { get; init; }
+    public string? PictureFileName { get; init; }
     
     [VectorStoreRecordData]
     public int CatalogBrandId { get; init; }
