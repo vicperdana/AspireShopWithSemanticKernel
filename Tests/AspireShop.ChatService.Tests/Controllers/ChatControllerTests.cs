@@ -1,4 +1,5 @@
 
+using System.Diagnostics.CodeAnalysis;
 using AspireShop.ChatService.Controllers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -11,6 +12,7 @@ namespace Tests.AspireShop.ChatService.Tests.Controllers;
 public class ChatControllerTests
 {
     [Fact]
+    [Experimental("SKEXP0001")]
     public async Task PostMessage_ReturnsExpectedResult()
     {
         // Arrange
@@ -35,6 +37,7 @@ public class ChatControllerTests
         var chatController = new ChatController(mockHostApplicationLifetime.Object, kernel);
 
         // Act
+#pragma warning disable SKEXP0001
         var result = await chatController.PostMessage("Test Message");
 
         // Assert

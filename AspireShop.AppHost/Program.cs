@@ -47,6 +47,10 @@ var chatDeploymentName = builder.AddParameter("chatDeploymentName", secret: true
 var chatEndpoint = builder.AddParameter("chatEndpoint", secret: true);
 var chatApiKey = builder.AddParameter("chatApiKey", secret: true);
 
+// Enable the voice service
+var voiceApiKey = builder.AddParameter("voiceApiKey", secret: true);
+var voiceModelId = builder.AddParameter("voiceModelId", secret: true);
+
 // Without Vector Search
 /*var chatService = builder.AddProject<Projects.AspireShop_ChatService>("chatservice")
     .WithEnvironment("AzureOpenAI__ChatDeploymentName", chatDeploymentName)
@@ -63,6 +67,8 @@ var chatService = builder.AddProject<Projects.AspireShop_ChatService>("chatservi
     .WithEnvironment("AzureOpenAI__EmbedDeploymentName", embedDeploymentName)
     .WithEnvironment("AzureOpenAI__EmbedEndpoint", embedEndpoint)
     .WithEnvironment("AzureOpenAI__EmbedApiKey", embedApiKey)
+    .WithEnvironment("OpenAI__VoiceApiKey", voiceApiKey)
+    .WithEnvironment("OpenAI__ModelId", voiceModelId)
     .WithReference(qdrant);
 
 /* Enable the chat service to use OpenAI

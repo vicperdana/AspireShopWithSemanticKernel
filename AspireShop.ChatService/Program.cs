@@ -7,6 +7,7 @@ using Microsoft.SemanticKernel.Plugins.Core;
 using AspireShop.ChatService.Services;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.Embeddings;
+using Microsoft.SemanticKernel.TextToAudio;
 using Qdrant.Client;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,6 +42,12 @@ builder.Services.AddSingleton<ITextEmbeddingGenerationService>(sp =>
     AzureOpenAI options = sp.GetRequiredService<IOptions<AzureOpenAI>>().Value;
     return new AzureOpenAITextEmbeddingGenerationService(options.EmbedDeploymentName, options.Endpoint, options.ApiKey);
 });
+
+/*builder.Services.AddSingleton<ITextToAudioService>(sp =>
+{
+    AzureOpenAI options = sp.GetRequiredService<IOptions<AzureOpenAI>>().Value;
+    return new AzureOpenAITextToAudioService(options.VoiceDeploymentName, options.VoiceEndpoint, options.VoiceApiKey);
+});*/
 #pragma warning restore 
     
 /* Add Semantic Kernel Services using OpenAI
@@ -80,6 +87,8 @@ builder.Services.AddSingleton<CatalogChatClientVector>(sp =>
 });
 
 
+
+
 /*builder.Services.AddKeyedSingleton<FilterCatalogItem>("FilterCatalogItem", (Func<IServiceProvider, object?, FilterCatalogItem>) ((sp, key) =>
 {
     var catalogClientChatService = sp.GetRequiredService<CatalogChatClient>();
@@ -110,6 +119,7 @@ builder.Services.AddKeyedTransient<Kernel>("AspireShopKernel", (sp, key) =>
     pluginCollection.AddFromObject(sp.GetRequiredKeyedService<FilterCatalogItemVector>("FilterCatalogItemVector"), "FilterCatalogItemVector");
 #pragma warning disable SKEXP0050
     pluginCollection.AddFromType<ConversationSummaryPlugin>();
+
     // When created by the dependency injection container, Semantic Kernel logging is included by default
     return new Kernel(sp, pluginCollection);
 });

@@ -1,12 +1,15 @@
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using Google.Protobuf;
+using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace AspireShop.Frontend.Services
 {
     public class ChatServiceClient (HttpClient httpClient)
     {
-        
+        [Experimental("SKEXP0001")]
         public async Task<ChatService?> SendMessage(string message, ChatHistory? history = null, CancellationToken cancellationToken = default)
         {
             string url = "";
@@ -33,7 +36,7 @@ namespace AspireShop.Frontend.Services
                 throw new HttpRequestException($"Request to {url} failed with status code {responseJson.StatusCode}");
             }
         }
-
-        public record ChatService(string message, ChatHistory history, string? intent = null);
+        [Experimental("SKEXP0001")]
+        public record ChatService (string message, ChatHistory history, string? intent = null, byte[]? audioContent = null);
     }
 }

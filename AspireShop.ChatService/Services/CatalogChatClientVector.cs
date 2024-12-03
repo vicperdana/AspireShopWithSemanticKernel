@@ -68,8 +68,6 @@ public class CatalogChatClientVector
                 DefinitionEmbedding = searchResultItem.Record.DefinitionEmbedding
             });
         }
-
-       
         return catalogItems;
     }
 }

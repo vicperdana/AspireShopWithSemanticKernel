@@ -1,3 +1,5 @@
+@using System.Diagnostics.CodeAnalysis
+@using Microsoft.SemanticKernel
 @using Microsoft.SemanticKernel.ChatCompletion
 @inject ChatServiceClient ChatServiceClient
 @inject NavigationManager NavigationManager
@@ -58,6 +60,7 @@
         return Task.CompletedTask;
     }
 
+    #pragma warning disable SKEXP0001
     private async Task Send()
     {
         if (!string.IsNullOrEmpty(inputMessage))
@@ -75,16 +78,24 @@
                 string searchText = response.intent;
                 NavigationManager.NavigateTo("/?searchText=" + searchText);
             }
+            //Play audio response
+            //await Speak(response.message);
+            #pragma warning disable SKEXP0001
+            await SpeakWithOpenAI(response.audioContent);
+            #pragma warning restore SKEXP0001
             //Reload the catalog and pass it on to the Home page
             isThinking = StopThinking();
         }
     }
-
+#pragma warning restore SKEXP0001
+    
     async Task KeyUp(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
-        {
+        {   
+#pragma warning disable SKEXP0001
             await Send();
+#pragma warning restore SKEXP0001
         }
     }
 
@@ -103,8 +114,43 @@
     public async Task ReceiveSpeechInput(string transcript)
     {
         inputMessage = transcript;
+#pragma warning disable SKEXP0001
         await Send();
+#pragma warning restore SKEXP0001
         isThinking = StopThinking();
     }
+    
+    private async Task Speak(string message)
+    {
+        // Robotic sound
+        await JSRuntime.InvokeVoidAsync("customSpeechSynthesis.speakText", message);
+    }
+    
+    #pragma warning disable SKEXP0001
+    private async Task SpeakWithOpenAI(byte[] audio)
+    {
+        if (audio == null || audio.Length == 0)
+        {
+            Console.WriteLine("Audio content is null or has no data. Cannot play audio.");
+            return;
+        }
+
+        try
+        {
+            // Convert the nullable byte array to a base64 string
+            string base64Mp3 = Convert.ToBase64String(audio);
+
+            // Convert the base64 string to a data URL
+            string dataUrl = $"data:audio/mp3;base64,{base64Mp3}";
+
+            // Call JavaScript to play the audio
+            await JSRuntime.InvokeVoidAsync("customSpeechSynthesis.playAudio", dataUrl);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in SpeakWithOpenAI: {ex.Message}");
+        }
+    }
+#pragma warning restore SKEXP0001
 
 }
