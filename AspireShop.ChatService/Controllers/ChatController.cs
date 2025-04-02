@@ -180,6 +180,8 @@ public class ChatController(
                     catalogItemsPage = JsonSerializer.Deserialize<CatalogItemsPage>(chatHistoryItem.Content);
             }
         }
+        
+        // Voice integration
         var modelId = Environment.GetEnvironmentVariable("OpenAI__ModelId")
                              ?? throw new ArgumentException("Environment variable 'OpenAI__ModelId' is not set.");
         var apiKey = Environment.GetEnvironmentVariable("OpenAI__VoiceApiKey")
