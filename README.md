@@ -11,7 +11,9 @@ urlFragment: "AspireShopWithSK"
 description: "An example shop app with assistant written with .NET Aspire and Semantic Kernel"
 ---
 ![Build status](https://github.com/vicperdana/AspireShopWithSemanticKernel/actions/workflows/build.yaml/badge.svg?branch=main) [![CodeQL](https://github.com/vicperdana/AspireShopWithSemanticKernel/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/vicperdana/AspireShopWithSemanticKernel/actions/workflows/codeql.yml)
-# 🤖 Aspire Shop with Semantic Kernel 🔋
+# AspireShop with Agent Framework + Stripe Payment Integration
+
+> **⚠️ MIGRATION NOTE**: This codebase has been migrated from Semantic Kernel to **Microsoft Agent Framework** with **Stripe Hosted Checkout** integration. See [Migration Guide](specs/001-agent-framework-stripe-mcp/agent-framework-migration.md) for details.
 
 ![Screenshot of the web front end the .NET Aspire Shop sample](./images/aspireshop-frontend-complete.png)
 
@@ -24,23 +26,45 @@ The app consists of four services:
 - **AspireShop.CatalogService**: This is an HTTP API that provides access to the catalog of products stored in a PostgreSQL database.
 - **AspireShop.CatalogDbManager**: This is an HTTP API that manages the initialization and updating of the catalog database.
 - **AspireShop.BasketService**: This is a gRPC service that provides access to the shopping cart stored in Redis.
-- **NEW! AspireShop.ChatService**: This is an HTTP API that provides an intelligent assistant to help users with their shopping experience. 
+- **NEW! AspireShop.ChatService**: This is an HTTP API that provides an intelligent assistant to help users with their shopping experience powered by Microsoft Agent Framework (migrated from Semantic Kernel).
+- **NEW! Payment Integration**: Stripe Hosted Checkout integration with payment lifecycle management (pending/paid/failed/expired).
 
 The app also includes a class library project, **AspireShop.ServiceDefaults**, that contains the service defaults used by the service projects.
 
+## 🆕 What's New in This Version
+
+### Agent Framework Migration
+- **Migrated from Semantic Kernel to Microsoft Agent Framework**
+  - Simpler abstractions with `IChatClient` and `IChatAgent`
+  - Built-in OpenTelemetry support
+  - 100% feature parity with previous SK implementation
+  - See [Agent Framework Migration Guide](specs/001-agent-framework-stripe-mcp/agent-framework-migration.md)
+
+### Stripe Payment Integration
+- **Hosted Checkout**: PCI SAQ A compliant (no card data storage)
+- **Payment Lifecycle**: Automatic status transitions (pending→paid/failed/expired)
+- **Webhook Support**: Real-time payment status updates
+- **Session Expiration**: 15-minute TTL with background cleanup
+- **Rate Limiting**: Chat throttle (30 req/min) + basket session guard (2min window)
+- See [Payment Integration Guide](docs/payment-integration-guide.md)
+
 ## Pre-requisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Semantic Kernel](https://github.com/microsoft/semantic-kernel)
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [Microsoft Agent Framework](https://github.com/microsoft/agents) (via NuGet)
+- [Stripe Account](https://stripe.com) (test mode for development)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - **Optional** [Visual Studio 2022 17.9 Preview](https://visualstudio.microsoft.com/vs/preview/)
+- **Optional** [Stripe CLI](https://stripe.com/docs/stripe-cli) (for local webhook testing)
 
 ## Running the app locally
 
-Edit the `appsettings.Development.json` file in the `AspireShop.AppHost` project to point to the correct values as follows:
+### Configuration
 
-### Azure OpenAI    
-When using Azure OpenAI, use and update these values:
+#### 1. AI Configuration
+Edit the `appsettings.Development.json` file in the `AspireShop.AppHost` project:
+
+**Azure OpenAI:**
 ```json
 "Parameters" : {
   "ChatDeploymentName": "Replace this with your Azure OpenAI Chat Deployment",
@@ -49,14 +73,37 @@ When using Azure OpenAI, use and update these values:
 }
 ```
 
-### OpenAI
-When using OpenAI, use and update these values:
+**OpenAI:**
 ```json
 "Parameters" : {
   "ChatApiKey": "Replace this with your OpenAI Api Key",
   "ChatModelId": "Replace this with your OpenAI Model Id"
 }
 ```
+
+#### 2. Stripe Configuration
+Add Stripe configuration to `appsettings.Development.json`:
+
+```json
+"Stripe": {
+  "SecretKey": "sk_test_YOUR_SECRET_KEY",
+  "PublishableKey": "pk_test_YOUR_PUBLISHABLE_KEY",
+  "WebhookSecret": "whsec_YOUR_WEBHOOK_SECRET",
+  "SuccessUrl": "https://localhost:5001/checkout/success",
+  "CancelUrl": "https://localhost:5001/checkout/cancel"
+}
+```
+
+Get your Stripe keys from [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys).
+
+#### 3. Database Setup
+Run EF Core migrations:
+```bash
+cd AspireShop.CatalogDbManager
+dotnet ef database update --context CatalogDbContext
+```
+
+### Start the Application
 
 If using Visual Studio, open the solution file `AspireShop.sln` and launch/debug the `AspireShop.AppHost` project.
 

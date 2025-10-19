@@ -22,6 +22,9 @@
     <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="8.0.1" />
     <PackageReference Include="Grpc.HealthCheck" Version="2.70.0" />
     <PackageReference Include="Grpc.Net.ClientFactory" Version="2.70.0" />
+    <PackageReference Include="Microsoft.Extensions.AI" Version="9.0.1-preview.1.25690.1" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.0.1-preview.1.25690.1" />
+    <PackageReference Include="Stripe.net" Version="46.4.0" />
   </ItemGroup>
 
 </Project>

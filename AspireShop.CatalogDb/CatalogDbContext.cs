@@ -27,6 +27,10 @@ public class CatalogDbContext(DbContextOptions<CatalogDbContext> options) : DbCo
     
     public DbSet<CatalogType> CatalogTypes => Set<CatalogType>();
 
+    public DbSet<PaymentSession> PaymentSessions => Set<PaymentSession>();
+
+    public DbSet<Order> Orders => Set<Order>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         DefineCatalogBrand(builder.Entity<CatalogBrand>());
@@ -34,6 +38,12 @@ public class CatalogDbContext(DbContextOptions<CatalogDbContext> options) : DbCo
         DefineCatalogItem(builder.Entity<CatalogItem>());
 
         DefineCatalogType(builder.Entity<CatalogType>());
+
+        DefinePaymentSession(builder.Entity<PaymentSession>());
+
+        DefineOrder(builder.Entity<Order>());
+
+        DefineOrderItem(builder.Entity<OrderItem>());
     }
 
     private static void DefineCatalogType(EntityTypeBuilder<CatalogType> builder)
@@ -92,6 +102,73 @@ public class CatalogDbContext(DbContextOptions<CatalogDbContext> options) : DbCo
         builder.Property(cb => cb.Brand)
             .IsRequired()
             .HasMaxLength(100);
+    }
+
+    private static void DefinePaymentSession(EntityTypeBuilder<PaymentSession> builder)
+    {
+        builder.ToTable("PaymentSession");
+        builder.HasKey(ps => ps.StripeSessionId);
+
+        builder.Property(ps => ps.StripeSessionId)
+            .IsRequired()
+            .HasMaxLength(255);
+
+        builder.Property(ps => ps.CustomerEmail)
+            .IsRequired()
+            .HasMaxLength(255);
+
+        builder.Property(ps => ps.Status)
+            .IsRequired();
+
+        builder.HasOne(ps => ps.Order)
+            .WithOne(o => o.PaymentSession)
+            .HasForeignKey<PaymentSession>(ps => ps.OrderId);
+
+        builder.HasIndex(ps => new { ps.Status, ps.ExpiresUtc });
+    }
+
+    private static void DefineOrder(EntityTypeBuilder<Order> builder)
+    {
+        builder.ToTable("Order");
+        builder.HasKey(o => o.OrderId);
+
+        builder.Property(o => o.CustomerEmail)
+            .IsRequired()
+            .HasMaxLength(255);
+
+        builder.Property(o => o.TotalAmount)
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(o => o.Currency)
+            .IsRequired()
+            .HasMaxLength(3);
+
+        builder.Property(o => o.PaymentStatus)
+            .IsRequired();
+
+        builder.HasMany(o => o.Items)
+            .WithOne(oi => oi.Order)
+            .HasForeignKey(oi => oi.OrderId);
+
+        builder.HasIndex(o => o.CustomerEmail);
+        builder.HasIndex(o => o.PaymentStatus);
+    }
+
+    private static void DefineOrderItem(EntityTypeBuilder<OrderItem> builder)
+    {
+        builder.ToTable("OrderItem");
+        builder.HasKey(oi => oi.OrderItemId);
+
+        builder.Property(oi => oi.Quantity)
+            .IsRequired();
+
+        builder.Property(oi => oi.UnitPrice)
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
+
+        builder.Property(oi => oi.CatalogItemId)
+            .IsRequired();
     }
 
     private static async Task<List<T>> ToListAsync<T>(IAsyncEnumerable<T> asyncEnumerable)

@@ -1,0 +1,105 @@
+@using AspireShop.Frontend.Services
+@inject IConfiguration Configuration
+
+<div class="checkout-container">
+    @if (IsLoading)
+    {
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Creating checkout session...</span>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @ErrorMessage
+        </div>
+    }
+    else
+    {
+        <button class="btn btn-primary btn-lg" @onclick="HandleCheckout" disabled="@IsDisabled">
+            <i class="bi bi-credit-card"></i> Proceed to Checkout
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string UserId { get; set; } = "anonymous";
+    
+    [Parameter]
+    public string CustomerEmail { get; set; } = string.Empty;
+    
+    [Parameter]
+    public List<CheckoutItem> Items { get; set; } = new();
+
+    private bool IsLoading { get; set; }
+    private bool IsDisabled => IsLoading || Items == null || !Items.Any() || string.IsNullOrWhiteSpace(CustomerEmail);
+    private string? ErrorMessage { get; set; }
+
+    private async Task HandleCheckout()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var chatServiceUrl = Configuration["ChatService:Url"] ?? "http://localhost:5002";
+            var checkoutUrl = $"{chatServiceUrl}/api/checkout/session";
+
+            using var httpClient = new HttpClient();
+            var request = new CreateCheckoutSessionRequest(CustomerEmail, Items, UserId);
+            var response = await httpClient.PostAsJsonAsync(checkoutUrl, request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<CheckoutSessionResponse>();
+                if (result != null && !string.IsNullOrWhiteSpace(result.CheckoutUrl))
+                {
+                    // Redirect to Stripe Checkout
+                    NavigationManager.NavigateTo(result.CheckoutUrl, forceLoad: true);
+                }
+                else
+                {
+                    ErrorMessage = "Failed to get checkout URL";
+                }
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            {
+                ErrorMessage = "Please wait before creating another checkout session";
+            }
+            else
+            {
+                ErrorMessage = "Failed to create checkout session. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    public class CheckoutItem
+    {
+        public int CatalogItemId { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+    }
+
+    public record CreateCheckoutSessionRequest(
+        string CustomerEmail,
+        List<CheckoutItem> Items,
+        string? BasketId = null);
+    
+    public record CheckoutSessionResponse(
+        string SessionId,
+        string CheckoutUrl,
+        DateTime ExpiresAt);
+}

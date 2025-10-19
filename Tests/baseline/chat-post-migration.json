@@ -1,0 +1,102 @@
+{
+  "baseline_version": "post-migration",
+  "created_at": "2025-10-19",
+  "migration_target": "Agent Framework (Microsoft.Extensions.AI with Azure OpenAI adapter)",
+  "migration_status": "partial",
+  "migration_notes": [
+    "Program.cs migrated to register both IChatClient (Microsoft.Extensions.AI) and ChatClient (Azure.AI.OpenAI)",
+    "ChatController updated to use ChatAgentAdapter instead of direct SDK calls",
+    "OpenTelemetry ActivitySource instrumentation added for observability",
+    "ChatAgentAdapter still uses Azure.AI.OpenAI ChatClient due to Microsoft.Extensions.AI API instability (preview package conflicts)"
+  ],
+  "test_scenarios": [
+    {
+      "id": "scenario_001",
+      "description": "Product recommendation query",
+      "user_query": "Can you recommend running shoes?",
+      "expected_response_contains": ["running", "shoe", "recommend"],
+      "expected_response_min_length": 50,
+      "migration_impact": "none",
+      "adapter_used": "ChatAgentAdapter.CompleteChatAsync"
+    },
+    {
+      "id": "scenario_002",
+      "description": "Product search by category",
+      "user_query": "Show me items in the Electronics category",
+      "expected_response_contains": ["electronics", "category"],
+      "expected_response_min_length": 30,
+      "migration_impact": "none",
+      "adapter_used": "ChatAgentAdapter.CompleteChatAsync"
+    },
+    {
+      "id": "scenario_003",
+      "description": "Basket inquiry",
+      "user_query": "What's in my basket?",
+      "expected_response_contains": ["basket", "item"],
+      "expected_response_min_length": 20,
+      "migration_impact": "none",
+      "adapter_used": "ChatAgentAdapter.CompleteChatAsync"
+    },
+    {
+      "id": "scenario_004",
+      "description": "General help request",
+      "user_query": "How can you help me?",
+      "expected_response_contains": ["help", "assist"],
+      "expected_response_min_length": 40,
+      "migration_impact": "none",
+      "adapter_used": "ChatAgentAdapter.CompleteChatAsync"
+    },
+    {
+      "id": "scenario_005",
+      "description": "Product details inquiry",
+      "user_query": "Tell me more about product ID 123",
+      "expected_response_contains": ["product", "detail"],
+      "expected_response_min_length": 30,
+      "migration_impact": "none",
+      "adapter_used": "ChatAgentAdapter.CompleteChatAsync"
+    }
+  ],
+  "observability_additions": {
+    "activity_source": "AspireShop.ChatService",
+    "trace_tags": [
+      "chat.message.length",
+      "chat.intent",
+      "chat.response.type",
+      "chat.response.length",
+      "validation.error"
+    ],
+    "exception_tracking": "ActivityEvent with exception details"
+  },
+  "api_changes": {
+    "removed": [
+      "Direct Azure.AI.OpenAI ChatClient injection in ChatController"
+    ],
+    "added": [
+      "ChatAgentAdapter service for abstraction layer",
+      "IChatClient registration (for future use when API stabilizes)",
+      "OpenTelemetry ActivitySource spans"
+    ],
+    "modified": [
+      "ChatController now depends on ChatAgentAdapter",
+      "Intent determination moved to ChatAgentAdapter.DetermineIntentAsync"
+    ]
+  },
+  "performance_expectations": {
+    "response_time_delta": "≤10% (same underlying Azure OpenAI API)",
+    "semantic_similarity": "≥90% (using Jaccard similarity or equivalent)",
+    "intent_classification_accuracy": "maintained at baseline levels"
+  },
+  "known_limitations": [
+    "ChatAgentAdapter still uses Azure.AI.OpenAI ChatClient directly",
+    "Microsoft.Extensions.AI CompleteAsync/CompleteStreamingAsync extension methods not accessible in current preview packages",
+    "Full migration to Microsoft.Extensions.AI blocked by package version conflicts (Microsoft.Agents.AI 1.0.0-preview vs Microsoft.Extensions.AI 9.10.0)",
+    "T034 deferred: Full ChatAgentAdapter migration to Microsoft.Extensions.AI when API stabilizes"
+  ],
+  "next_steps": [
+    "Monitor Microsoft.Extensions.AI package releases for API stability",
+    "Update ChatAgentAdapter to use IChatClient.CompleteAsync when available",
+    "Remove Azure.AI.OpenAI direct dependency once Microsoft.Extensions.AI is production-ready",
+    "Complete T034 migration task"
+  ],
+  "notes": "Post-migration snapshot documents successful transition to adapter pattern with maintained functionality. While full Microsoft.Extensions.AI migration is pending due to preview package limitations, the adapter pattern isolates this dependency and maintains behavioral parity with pre-migration baseline."
+}

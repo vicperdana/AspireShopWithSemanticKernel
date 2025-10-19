@@ -1,0 +1,196 @@
+@using System.Timers
+@inject IConfiguration Configuration
+@implements IDisposable
+
+<div class="payment-status-container">
+    @if (IsLoading)
+    {
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Checking payment status...</span>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> @ErrorMessage
+        </div>
+    }
+    else if (Status != null)
+    {
+        <div class="alert @GetStatusAlertClass()" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="@GetStatusIcon() me-2"></i>
+                <div>
+                    <strong>@GetStatusTitle()</strong>
+                    <p class="mb-0">@GetStatusMessage()</p>
+                    @if (Status.ExpiresAt.HasValue && Status.Status == "Pending")
+                    {
+                        <small class="text-muted">
+                            Session expires: @Status.ExpiresAt.Value.ToLocalTime().ToString("MMM dd, yyyy HH:mm:ss")
+                        </small>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string SessionId { get; set; } = string.Empty;
+
+    [Parameter]
+    public int PollingIntervalSeconds { get; set; } = 3;
+
+    [Parameter]
+    public EventCallback<SessionStatusResponse> OnStatusChanged { get; set; }
+
+    private SessionStatusResponse? Status { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private string? ErrorMessage { get; set; }
+    private System.Threading.Timer? _pollingTimer;
+    private string? _lastKnownStatus;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SessionId))
+        {
+            ErrorMessage = "Session ID is required";
+            IsLoading = false;
+            return;
+        }
+
+        // Start polling immediately
+        await CheckStatusAsync();
+        
+        // Set up periodic polling
+        _pollingTimer = new System.Threading.Timer(
+            async _ => await CheckStatusAsync(),
+            null,
+            TimeSpan.FromSeconds(PollingIntervalSeconds),
+            TimeSpan.FromSeconds(PollingIntervalSeconds));
+    }
+
+    private async Task CheckStatusAsync()
+    {
+        try
+        {
+            var chatServiceUrl = Configuration["ChatService:Url"] ?? "http://localhost:5002";
+            var statusUrl = $"{chatServiceUrl}/api/checkout/session/{SessionId}";
+
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync(statusUrl);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var newStatus = await response.Content.ReadFromJsonAsync<SessionStatusResponse>();
+                if (newStatus != null)
+                {
+                    Status = newStatus;
+                    IsLoading = false;
+                    ErrorMessage = null;
+
+                    // Notify parent component if status changed
+                    if (_lastKnownStatus != newStatus.Status)
+                    {
+                        _lastKnownStatus = newStatus.Status;
+                        await OnStatusChanged.InvokeAsync(newStatus);
+
+                        // Stop polling if terminal state reached
+                        if (IsTerminalStatus(newStatus.Status))
+                        {
+                            StopPolling();
+                        }
+
+                        await InvokeAsync(StateHasChanged);
+                    }
+                }
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                ErrorMessage = "Session not found";
+                IsLoading = false;
+                StopPolling();
+            }
+            else
+            {
+                ErrorMessage = "Failed to retrieve payment status";
+                IsLoading = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error checking status: {ex.Message}";
+            IsLoading = false;
+        }
+    }
+
+    private bool IsTerminalStatus(string status)
+    {
+        return status is "Paid" or "Failed" or "Expired";
+    }
+
+    private string GetStatusAlertClass()
+    {
+        return Status?.Status switch
+        {
+            "Paid" => "alert-success",
+            "Failed" => "alert-danger",
+            "Expired" => "alert-warning",
+            "Pending" => "alert-info",
+            _ => "alert-secondary"
+        };
+    }
+
+    private string GetStatusIcon()
+    {
+        return Status?.Status switch
+        {
+            "Paid" => "bi bi-check-circle-fill",
+            "Failed" => "bi bi-x-circle-fill",
+            "Expired" => "bi bi-clock-history",
+            "Pending" => "bi bi-hourglass-split",
+            _ => "bi bi-question-circle"
+        };
+    }
+
+    private string GetStatusTitle()
+    {
+        return Status?.Status switch
+        {
+            "Paid" => "Payment Successful",
+            "Failed" => "Payment Failed",
+            "Expired" => "Session Expired",
+            "Pending" => "Payment Pending",
+            _ => "Unknown Status"
+        };
+    }
+
+    private string GetStatusMessage()
+    {
+        return Status?.Status switch
+        {
+            "Paid" => "Your payment has been processed successfully. Thank you for your order!",
+            "Failed" => "Your payment could not be processed. Please try again or contact support.",
+            "Expired" => "Your checkout session has expired. Please create a new checkout session.",
+            "Pending" => "Waiting for payment confirmation. Please complete the payment in Stripe Checkout.",
+            _ => "Unable to determine payment status."
+        };
+    }
+
+    private void StopPolling()
+    {
+        _pollingTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+    }
+
+    public void Dispose()
+    {
+        _pollingTimer?.Dispose();
+    }
+
+    public record SessionStatusResponse(
+        string Status,
+        DateTime CreatedAt,
+        DateTime? CompletedAt,
+        DateTime? ExpiresAt);
+}

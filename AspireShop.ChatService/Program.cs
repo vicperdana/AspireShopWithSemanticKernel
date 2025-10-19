@@ -1,11 +1,15 @@
 using AspireShop.ChatService.Plugins;
-using Microsoft.SemanticKernel;
 using AspireShop.ChatService.Utilities;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
-using Microsoft.SemanticKernel.Plugins.Core;
 using AspireShop.ChatService.Services;
+using AspireShop.ServiceDefaults.AI;
+using AspireShop.ServiceDefaults.RateLimiting;
+using AspireShop.ServiceDefaults.Logging;
+using AspireShop.ServiceDefaults.Stripe;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
+using Azure.AI.OpenAI;
+using Azure;
+using OpenAI.Chat;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -18,30 +22,63 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
-//Add Semantic Kernel Services using Azure OpenAI
+// Add Agent Framework Services using Azure OpenAI
 builder.Services.AddOptions<AzureOpenAI>()
     .Bind(builder.Configuration.GetSection(nameof(AzureOpenAI)))
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
-// Chat completion service that kernels will use
-builder.Services.AddSingleton<IChatCompletionService>(sp =>
+// Configure IChatClient for Microsoft.Extensions.AI using Azure OpenAI
+// Also register Azure ChatClient for ChatAgentAdapter (temporary until Microsoft.Extensions.AI stabilizes)
+builder.Services.AddSingleton<ChatClient>(sp =>
 {
     AzureOpenAI options = sp.GetRequiredService<IOptions<AzureOpenAI>>().Value;
-    return new AzureOpenAIChatCompletionService(options.ChatDeploymentName, options.Endpoint, options.ApiKey);
+    var azureClient = new AzureOpenAIClient(new Uri(options.Endpoint), new AzureKeyCredential(options.ApiKey));
+    return azureClient.GetChatClient(options.ChatDeploymentName);
 });
 
-/* Add Semantic Kernel Services using OpenAI
+builder.Services.AddSingleton<IChatClient>(sp =>
+{
+    var azureChat = sp.GetRequiredService<ChatClient>();
+    // Convert Azure.AI.OpenAI ChatClient to Microsoft.Extensions.AI.IChatClient
+    return azureChat.AsIChatClient();
+});
+
+// Add throttling services
+builder.Services.AddSingleton<ChatThrottleOptions>(sp =>
+{
+    var options = new ChatThrottleOptions();
+    builder.Configuration.GetSection("ChatThrottle").Bind(options);
+    return options;
+});
+builder.Services.AddSingleton<IChatThrottle, InMemoryChatThrottle>();
+
+// Add Stripe configuration
+builder.Services.AddOptions<StripeSettings>()
+    .Bind(builder.Configuration.GetSection("Stripe"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+// Register Stripe client factory
+builder.Services.AddSingleton<StripeClientFactory>();
+
+// Register background services
+builder.Services.AddHostedService<ExpirationSweepService>();
+
+// Register ChatAgentAdapter
+builder.Services.AddSingleton<ChatAgentAdapter>();
+
+/* Add Agent Framework Services using OpenAI
 builder.Services.AddOptions<OpenAI>()
     .Bind(builder.Configuration.GetSection(nameof(OpenAI)))
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
-// Chat completion service that kernels will use
-builder.Services.AddSingleton<IChatCompletionService>(sp =>
+builder.Services.AddSingleton<IChatClient>(sp =>
 {
     OpenAI options = sp.GetRequiredService<IOptions<OpenAI>>().Value;
-    return new OpenAIChatCompletionService(options.ChatModelId, options.ApiKey);
+    var client = new OpenAIClient(options.ApiKey);
+    return client.AsChatClient(options.ChatModelId);
 });*/
 
 builder.Services.AddHttpServiceReference<CatalogChatClient>("https+http://catalogservice", healthRelativePath: "health");
@@ -56,16 +93,16 @@ builder.Services.AddKeyedSingleton<FilterCatalogItem>("FilterCatalogItem", (Func
     return new FilterCatalogItem(catalogClientChatService);
 }));
 
-builder.Services.AddKeyedTransient<Kernel>("AspireShopKernel", (sp, key) =>
+// Add Chat Agent
+builder.Services.AddSingleton<IChatAgent>(sp =>
 {
-    // Create a collection of plugins that the kernel will use
-    KernelPluginCollection pluginCollection = [];
-    pluginCollection.AddFromObject(sp.GetRequiredKeyedService<FilterCatalogItem>("FilterCatalogItem"), "FilterCatalogItem");
-    #pragma warning disable SKEXP0050
-    pluginCollection.AddFromType<ConversationSummaryPlugin>();
-    // When created by the dependency injection container, Semantic Kernel logging is included by default
-    return new Kernel(sp, pluginCollection);
+    var chatClient = sp.GetRequiredService<IChatClient>();
+    return new ChatClientAgent("AspireShopAgent", chatClient);
 });
+
+// Log migration started
+var logger = builder.Logging.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
+logger.LogAgentFrameworkMigrationStarted("ChatService");
 
 var app = builder.Build();
 

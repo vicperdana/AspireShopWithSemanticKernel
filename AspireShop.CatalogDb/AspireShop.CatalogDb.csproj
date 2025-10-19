@@ -10,4 +10,8 @@
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.2.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\PaymentStatus.cs" Link="Models\PaymentStatus.cs" />
+  </ItemGroup>
+
 </Project>

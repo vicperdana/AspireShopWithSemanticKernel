@@ -1,0 +1,70 @@
+# .dockerignore for AspireShop
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+azure-pipelines.yml
+.azure/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+[Dd]ebug/
+[Rr]elease/
+
+# NuGet
+*.nupkg
+.nuget/
+packages/
+
+# Logs
+*.log
+logs/
+
+# Test results
+TestResults/
+**/*TestResults*
+
+# Environment & secrets
+.env
+.env.*
+*.pfx
+*.p12
+appsettings.Development.json
+local.settings.json
+
+# Documentation
+README.md
+*.md
+docs/
+specs/
+
+# Docker
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# Aspire
+.tye/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+*.tmp
+*.temp
+*.cache

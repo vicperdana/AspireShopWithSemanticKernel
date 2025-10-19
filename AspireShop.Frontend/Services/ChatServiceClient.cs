@@ -1,23 +1,23 @@
 
 using System.Text.Json;
-using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.Extensions.AI;
 
 namespace AspireShop.Frontend.Services
 {
     public class ChatServiceClient (HttpClient httpClient)
     {
         
-        public async Task<ChatService?> SendMessage(string message, ChatHistory? history = null, CancellationToken cancellationToken = default)
+        public async Task<ChatService?> SendMessage(string message, IList<ChatMessage>? history = null, CancellationToken cancellationToken = default)
         {
             string url = "";
             if (history is not null)
             {
-                history.AddUserMessage(message);
+                history.Add(new ChatMessage(ChatRole.User, message));
                 
                 // loop all messages in history and add to the user message
                 for (int i=0; i<history.Count; i++)
                 {
-                    message += history[i].Content;
+                    message += history[i].Text;
                 }
             }
             url = $"/api/chat?message={Uri.EscapeDataString(message)}";
@@ -34,6 +34,6 @@ namespace AspireShop.Frontend.Services
             }
         }
 
-        public record ChatService(string message, ChatHistory history, string? intent = null);
+        public record ChatService(string message, IList<ChatMessage> history, string? intent = null);
     }
 }

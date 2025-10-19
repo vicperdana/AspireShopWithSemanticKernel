@@ -1,0 +1,140 @@
+openapi: 3.0.3
+info:
+  title: AspireShop Checkout & Agent Migration API
+  version: 0.1.0
+  description: Endpoints introduced/affected by Agent Framework migration + Stripe hosted checkout integration.
+servers:
+  - url: https://localhost:5001
+paths:
+  /api/checkout/session:
+    post:
+      summary: Create (or reuse) a Stripe hosted checkout session for current basket
+      operationId: createCheckoutSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSessionResponse'
+        '200':
+          description: Existing pending session reused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSessionResponse'
+        '400': { description: Invalid basket or email }
+        '429': { description: Rate limit exceeded }
+  /api/checkout/session/{sessionId}:
+    get:
+      summary: Retrieve payment session status
+      operationId: getCheckoutSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentSession'
+        '404': { description: Not found }
+  /api/checkout/webhook:
+    post:
+      summary: Stripe webhook receiver for session completion/failure
+      operationId: stripeWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StripeWebhookEvent'
+      responses:
+        '200': { description: Processed }
+        '400': { description: Signature verification failed }
+        '202': { description: Deferred (idempotent replay) }
+components:
+  schemas:
+    CreateSessionRequest:
+      type: object
+      required: [basketId, customerEmail]
+      properties:
+        basketId:
+          type: string
+        customerEmail:
+          type: string
+          format: email
+    CreateSessionResponse:
+      type: object
+      required: [sessionId, url, status]
+      properties:
+        sessionId:
+          type: string
+        url:
+          type: string
+          format: uri
+        status:
+          type: string
+          enum: [pending, paid, failed, expired]
+    PaymentSession:
+      type: object
+      required: [stripeSessionId, orderId, customerEmail, status, createdUtc]
+      properties:
+        stripeSessionId:
+          type: string
+        orderId:
+          type: string
+          format: uuid
+        customerEmail:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [pending, paid, failed, expired]
+        createdUtc:
+          type: string
+          format: date-time
+        completedUtc:
+          type: string
+          format: date-time
+          nullable: true
+        expiresUtc:
+          type: string
+          format: date-time
+          nullable: true
+    StripeWebhookEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        data:
+          type: object
+          properties:
+            object:
+              type: object
+              properties:
+                id:
+                  type: string
+                payment_status:
+                  type: string
+                  enum: [paid, failed]
+                status:
+                  type: string
+                customer_email:
+                  type: string
+                  format: email
+                created:
+                  type: integer
+                  format: int64

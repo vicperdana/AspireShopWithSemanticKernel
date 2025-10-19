@@ -1,0 +1,70 @@
+@page "/checkout/success"
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                    <h2 class="card-title mt-3">Payment Successful!</h2>
+                    <p class="card-text">
+                        Thank you for your order. Your payment has been processed successfully.
+                    </p>
+                    
+                    @if (!string.IsNullOrWhiteSpace(OrderId))
+                    {
+                        <div class="alert alert-info mt-3">
+                            <strong>Order ID:</strong> @OrderId
+                        </div>
+                    }
+
+                    <div class="mt-4">
+                        <a href="/" class="btn btn-primary">Return to Shop</a>
+                        <a href="/orders" class="btn btn-outline-secondary ms-2">View Orders</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "session_id")]
+    public string? SessionId { get; set; }
+
+    private string? OrderId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(SessionId))
+        {
+            await FetchOrderDetails();
+        }
+    }
+
+    private async Task FetchOrderDetails()
+    {
+        try
+        {
+            var chatServiceUrl = Configuration["ChatService:Url"] ?? "http://localhost:5002";
+            var sessionUrl = $"{chatServiceUrl}/api/payment/session/{SessionId}";
+
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync(sessionUrl);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<SessionResponse>();
+                OrderId = result?.OrderId;
+            }
+        }
+        catch (Exception)
+        {
+            // Silently fail - order ID is informational only
+        }
+    }
+
+    public record SessionResponse(string SessionId, string OrderId, string Status, DateTime CreatedUtc, DateTime ExpiresUtc);
+}

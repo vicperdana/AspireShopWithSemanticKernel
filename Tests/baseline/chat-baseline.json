@@ -1,0 +1,43 @@
+{
+  "baseline_version": "pre-migration",
+  "created_at": "2025-10-18",
+  "migration_target": "Agent Framework",
+  "test_scenarios": [
+    {
+      "id": "scenario_001",
+      "description": "Product recommendation query",
+      "user_query": "Can you recommend running shoes?",
+      "expected_response_contains": ["running", "shoe", "recommend"],
+      "expected_response_min_length": 50
+    },
+    {
+      "id": "scenario_002",
+      "description": "Product search by category",
+      "user_query": "Show me items in the Electronics category",
+      "expected_response_contains": ["electronics", "category"],
+      "expected_response_min_length": 30
+    },
+    {
+      "id": "scenario_003",
+      "description": "Basket inquiry",
+      "user_query": "What's in my basket?",
+      "expected_response_contains": ["basket", "item"],
+      "expected_response_min_length": 20
+    },
+    {
+      "id": "scenario_004",
+      "description": "General help request",
+      "user_query": "How can you help me?",
+      "expected_response_contains": ["help", "assist"],
+      "expected_response_min_length": 40
+    },
+    {
+      "id": "scenario_005",
+      "description": "Product details inquiry",
+      "user_query": "Tell me more about product ID 123",
+      "expected_response_contains": ["product", "detail"],
+      "expected_response_min_length": 30
+    }
+  ],
+  "notes": "Baseline captured before Agent Framework migration. Responses will be compared post-migration to ensure ≤10% deviation in quality metrics (response time, semantic similarity, user satisfaction proxy)."
+}

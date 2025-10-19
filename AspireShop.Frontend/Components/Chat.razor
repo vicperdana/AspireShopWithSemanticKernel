@@ -1,4 +1,4 @@
-@using Microsoft.SemanticKernel.ChatCompletion
+@using Microsoft.Extensions.AI
 @inject ChatServiceClient ChatServiceClient
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
@@ -34,7 +34,7 @@
     private bool isChatOpen = false;
     private string inputMessage = string.Empty;
     private List<string> messages = new List<string>();
-    private ChatHistory history = [];
+    private List<ChatMessage> history = [];
     private bool isThinking = false;
     private string initialMessage = "AspireShop: Welcome to AspireShop! I can help you with browsing the catalog item, say the item you're looking for and I'll help you navigate to the correct catalog items.";
 
@@ -49,7 +49,7 @@
     {
         isThinking = true;
         messages.Add(initialMessage);
-        history.AddSystemMessage(initialMessage);
+        history.Add(new ChatMessage(ChatRole.System, initialMessage));
         isThinking = StopThinking();
         return Task.CompletedTask;
     }
@@ -63,8 +63,8 @@
             messages.Add("You: " + inputMessage);
             
             messages.Add("AspireShop: "+response!.message.Replace("\n", "<br/>"));
-            history.AddUserMessage(inputMessage);
-            history.AddAssistantMessage(response.message);
+            history.Add(new ChatMessage(ChatRole.User, inputMessage));
+            history.Add(new ChatMessage(ChatRole.Assistant, response.message));
             inputMessage = string.Empty;
             if (response.intent is not null)
             {
